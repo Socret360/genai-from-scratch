@@ -57,12 +57,6 @@ training_set = DataGenerator(
     input_size=config["input_size"],
 )
 
-
-@tf.function
-def model_trace(x):
-    return model(x)
-
-
 def setup_tensorboard():
     train_log_dir = os.path.join(args.output_dir, "logs", "train")
     train_summary_writer = tf.summary.create_file_writer(train_log_dir)
