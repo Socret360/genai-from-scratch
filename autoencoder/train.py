@@ -57,6 +57,7 @@ training_set = DataGenerator(
     input_size=config["input_size"],
 )
 
+
 def setup_tensorboard():
     train_log_dir = os.path.join(args.output_dir, "logs", "train")
     train_summary_writer = tf.summary.create_file_writer(train_log_dir)
@@ -138,11 +139,6 @@ if __name__ == "__main__":
     current_epoch = tf.Variable(0)
     best_epoch = tf.Variable(0)
     best_loss = tf.Variable(99999, dtype=tf.float32)
-    embeddings = tf.Variable(
-        np.zeros((len(samples_to_visualize), config["embedding_dims"])),
-        dtype=tf.float32
-    )
-
     ckpt = tf.train.Checkpoint(
         model=model,
         optimizer=optimizer,
@@ -150,28 +146,29 @@ if __name__ == "__main__":
         best_loss=best_loss,
         best_epoch=best_epoch,
     )
-
-    embeddings_ckpt = tf.train.Checkpoint(embeddings=embeddings)
-
     manager = tf.train.CheckpointManager(
         ckpt,
         os.path.join(args.output_dir),
         max_to_keep=3
     )
+    ckpt.restore(manager.latest_checkpoint)
+    if manager.latest_checkpoint:
+        print("Restored checkpoint from {}".format(manager.latest_checkpoint))
+    else:
+        print("Initializing from scratch.")
 
+    embeddings = tf.Variable(
+        np.zeros((len(samples_to_visualize), config["embedding_dims"])),
+        dtype=tf.float32
+    )
+    embeddings_ckpt = tf.train.Checkpoint(embeddings=embeddings)
     embeddings_manager = tf.train.CheckpointManager(
         embeddings_ckpt,
         os.path.join(args.output_dir, "logs", "train"),
         max_to_keep=1,
         checkpoint_name="embeddings",
     )
-
-    ckpt.restore(manager.latest_checkpoint)
-
-    if manager.latest_checkpoint:
-        print("Restored checkpoint from {}".format(manager.latest_checkpoint))
-    else:
-        print("Initializing from scratch.")
+    embeddings_ckpt.restore(embeddings_manager.latest_checkpoint)
 
     while True:
         curr_epoch = int(ckpt.epoch)
