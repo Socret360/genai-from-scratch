@@ -1,0 +1,12 @@
+{
+    "encoder_hidden_dims": [
+        200,
+        100
+    ],
+    "embedding_dims": 50,
+    "decoder_hidden_dims": [
+        100,
+        200
+    ],
+    "input_size": 50
+}
